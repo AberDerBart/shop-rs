@@ -34,20 +34,21 @@ fn main() -> Result<()> {
 
     match opt.cmd {
         Command::Add{item: i} => {
+            println!("add {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
-            println!("add {:#?}", i);
             let result = opts::add(&config, item);
             println!("add result {:#?}", result);
         },
         Command::Remove{item: i} => {
+            println!("remove {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
-            match parse_index(item) {
-                Some(i) => remove_by_index(i),
-                None => remove_item(item),
-            }
-            println!("remove {:#?}", i);
+            let result = match parse_index(&item) {
+                Some(i) => opts::remove_by_index(&config, i),
+                None => Ok(()),//remove_item(item),
+            };
+            println!("remove result {:#?}", result);
         },
     }
     Ok(())

@@ -38,3 +38,15 @@ pub fn add(config: &Config, item: String) -> Result<()> {
 
     Ok(())
 }
+
+pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
+    let agent = ureq::AgentBuilder::new()
+        .proxy(ureq::Proxy::new("localhost:8080")?)
+        .build();
+
+    let mut state = get_current_list(&agent, config)?;
+    state.current_state.remove_by_index(index);
+    sync(&agent, &config, state)?;
+
+    Ok(())
+}
