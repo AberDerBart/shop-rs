@@ -1,17 +1,6 @@
 use anyhow::Result;
 
-use shop_rs::{SLItem, State, SyncRequest, SyncedShoppingList};
-
-struct Config {
-    server: String,
-    list_id: String,
-}
-
-impl Config {
-    fn path(&self) -> String {
-        format!("{}/api/{}", self.server, self.list_id)
-    }
-}
+use shop_rs::{Config, State, SyncRequest, SyncedShoppingList};
 
 fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<SyncedShoppingList> {
     let mut path = config.path();
@@ -39,25 +28,23 @@ fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
     Ok(State::new(synced_list))
 }
 
+fn add(config: &Config, item: String) -> Result<()> {
+    let agent = ureq::AgentBuilder::new()
+        .proxy(ureq::Proxy::new("localhost:8080")?)
+        .build();
+
+    let mut state = get_current_list(&agent, config)?;
+    state.current_state.add(item);
+    sync(&agent, &config, state)?;
+
+    Ok(())
+}
+
 fn main() -> Result<()> {
     let config = Config {
         server: "http://localhost:4000".to_owned(),
         list_id: "Demo".to_owned(),
     };
 
-    let agent = ureq::AgentBuilder::new()
-        .proxy(ureq::Proxy::new("localhost:8080")?)
-        .build();
-
-    let mut state = get_current_list(&agent, &config)?;
-    println!("initial state: {:#?}", state);
-
-    let item = SLItem::new("(OG) test".to_owned());
-    state.current_state.add(item);
-
-    let state = sync(&agent, &config, state);
-
-    println!("{:#?}", state);
-
-    Ok(())
+    add(&config, "(OG) foo".to_owned())
 }
