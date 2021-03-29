@@ -1,3 +1,4 @@
+pub mod opts;
 mod types;
 pub use types::*;
 
