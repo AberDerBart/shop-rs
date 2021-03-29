@@ -33,6 +33,25 @@ impl SLItem {
             string_representation,
         }
     }
+
+    pub fn edit(&mut self, string_representation: String) {
+        let id = match self {
+            SLItem::ServerRepr {
+                id,
+                name: _,
+                amount: _,
+                category: _,
+            } => *id,
+            SLItem::StringRepr {
+                id,
+                string_representation: _,
+            } => *id,
+        };
+        *self = SLItem::StringRepr {
+            id,
+            string_representation,
+        };
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
