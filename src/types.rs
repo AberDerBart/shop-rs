@@ -34,6 +34,21 @@ impl SLItem {
         }
     }
 
+    pub fn id(&self) -> &Uuid {
+        match self {
+            SLItem::ServerRepr {
+                id,
+                name: _,
+                amount: _,
+                category: _,
+            } => id,
+            SLItem::StringRepr {
+                id,
+                string_representation: _,
+            } => id,
+        }
+    }
+
     pub fn edit(&mut self, string_representation: String) {
         let id = match self {
             SLItem::ServerRepr {
@@ -64,6 +79,10 @@ pub struct ShoppingList {
 impl ShoppingList {
     pub fn add(&mut self, string_representation: String) {
         self.items.push(SLItem::new(string_representation));
+    }
+
+    pub fn remove(&mut self, item: &SLItem) {
+        self.items.retain(|i| i.id() != item.id());
     }
 }
 
