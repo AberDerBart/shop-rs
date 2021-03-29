@@ -98,3 +98,13 @@ impl SyncRequest {
         }
     }
 }
+
+impl From<State> for SyncRequest {
+    fn from(state: State) -> Self {
+        SyncRequest {
+            previous_sync: state.previous_sync,
+            current_state: state.current_state,
+            include_in_reponse: vec![],
+        }
+    }
+}

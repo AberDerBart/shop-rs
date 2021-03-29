@@ -22,7 +22,7 @@ fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<SyncedShoppingLi
     Ok(resp)
 }
 
-fn sync(agent: &ureq::Agent, config: &Config, state: &State) -> Result<State> {
+fn sync(agent: &ureq::Agent, config: &Config, state: State) -> Result<State> {
     let mut path = config.path();
     path.push_str("/sync");
 
@@ -30,7 +30,7 @@ fn sync(agent: &ureq::Agent, config: &Config, state: &State) -> Result<State> {
 
     let resp: ureq::Response = agent.post(&path).send_json(serde_json::to_value(req)?)?;
     let resp: SyncedShoppingList = resp.into_json()?;
-    Ok(State::new(resp));
+    Ok(State::new(resp))
 }
 
 fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
@@ -49,13 +49,13 @@ fn main() -> Result<()> {
         .proxy(ureq::Proxy::new("localhost:8080")?)
         .build();
 
-    let state = get_current_list(&agent, &config)?;
+    let mut state = get_current_list(&agent, &config)?;
     println!("initial state: {:#?}", state);
 
     let item = SLItem::new("(OG) test".to_owned());
     state.current_state.add(item);
 
-    let state = sync(&agent, &config, SyncRequest::new(state, new_state.list));
+    let state = sync(&agent, &config, state);
 
     println!("{:#?}", state);
 
