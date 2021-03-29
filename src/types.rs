@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -83,6 +84,13 @@ impl ShoppingList {
 
     pub fn remove_by_index(&mut self, index: usize) {
         self.items.remove(index);
+    }
+
+    pub fn edit_by_index(&mut self, index: usize, new_value: String) -> Result<()> {
+        match self.items.get_mut(index) {
+            None => Err(anyhow!("invalid index")),
+            Some(item) => Ok(item.edit(new_value)),
+        }
     }
 }
 
