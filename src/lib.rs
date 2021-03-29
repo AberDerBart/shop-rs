@@ -62,8 +62,8 @@ pub struct ShoppingList {
 }
 
 impl ShoppingList {
-    pub fn add(&mut self, item: SLItem) {
-        self.items.push(item);
+    pub fn add(&mut self, string_representation: String) {
+        self.items.push(SLItem::new(string_representation));
     }
 }
 
