@@ -81,8 +81,8 @@ impl ShoppingList {
         self.items.push(SLItem::new(string_representation));
     }
 
-    pub fn remove(&mut self, item: &SLItem) {
-        self.items.retain(|i| i.id() != item.id());
+    pub fn remove_by_index(&mut self, index: usize) {
+        self.items.remove(index);
     }
 }
 
