@@ -12,7 +12,7 @@ struct Shop {
     /// name of the shopping list
     list: Option<String>,
     #[structopt(subcommand)]
-    cmd: Command,
+    cmd: Option<Command>,
 }
 
 #[derive(StructOpt, Debug)]
@@ -33,14 +33,14 @@ fn main() -> Result<()> {
     println!("{:?}", opt);
 
     match opt.cmd {
-        Command::Add{item: i} => {
+        Some(Command::Add{item: i}) => {
             println!("add {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
             let result = opts::add(&config, item);
             println!("add result {:#?}", result);
         },
-        Command::Remove{item: i} => {
+        Some(Command::Remove{item: i}) => {
             println!("remove {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
@@ -50,6 +50,11 @@ fn main() -> Result<()> {
             };
             println!("remove result {:#?}", result);
         },
+        None => {
+            let config = gen_config(opt.server, opt.list);
+            let result = opts::print_list(&config);
+            println!("remove result {:#?}", result);
+        }
     }
     Ok(())
 }

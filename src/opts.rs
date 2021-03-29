@@ -50,3 +50,14 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
 
     Ok(())
 }
+
+pub fn print_list(config: &Config) -> Result<()> {
+    let agent = ureq::AgentBuilder::new()
+        .build();
+
+    let state = get_current_list(&agent, config)?;
+
+    println!("{}", state.current_state);
+
+    Ok(())
+}
