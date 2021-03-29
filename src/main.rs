@@ -1,121 +1,63 @@
 use anyhow::Result;
-use serde::{Deserialize, Serialize};
-use serde_json;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Amount {
-    value: f64,
-    unit: Option<String>,
+use shop_rs::{SLItem, State, SyncRequest, SyncedShoppingList};
+
+struct Config {
+    server: String,
+    list_id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct SLItemServer {
-    id: String,
-    name: String,
-    amount: Option<Amount>,
-    category: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct SLItemString {
-    id: Option<String>,
-    #[serde(rename = "stringRepresentation")]
-    string_representation: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-enum SLItem {
-    Server {
-        id: String,
-        name: String,
-        amount: Option<Amount>,
-        category: Option<String>,
-    },
-    StringRepr {
-        // #[serde(skip_serializing_if = "Option::is_none")]
-        id: Option<String>,
-        #[serde(rename = "stringRepresentation")]
-        string_representation: String,
-    },
-}
-
-impl SLItem {
-    fn set_name(&mut self, new_name: &str) {
-        match self {
-            SLItem::Server {
-                id: _,
-                name,
-                amount: _,
-                category: _,
-            } => {
-                *name = new_name.to_owned();
-            }
-            SLItem::StringRepr {
-                id: _,
-                string_representation,
-            } => *string_representation = new_name.to_owned(),
-        }
+impl Config {
+    fn path(&self) -> String {
+        format!("{}/api/{}", self.server, self.list_id)
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct ShoppingList {
-    id: String,
-    title: String,
-    items: Vec<SLItem>,
+fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<SyncedShoppingList> {
+    let mut path = config.path();
+    path.push_str("/sync");
+    let resp: ureq::Response = agent.get(&path).call()?;
+
+    let resp: SyncedShoppingList = resp.into_json()?;
+    Ok(resp)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct SyncedShoppingList {
-    id: String,
-    title: String,
-    items: Vec<SLItem>,
-    token: String,
-    #[serde(rename = "changeId")]
-    change_id: String,
+fn sync(agent: &ureq::Agent, config: &Config, state: &State) -> Result<State> {
+    let mut path = config.path();
+    path.push_str("/sync");
+
+    let req: SyncRequest = state.into();
+
+    let resp: ureq::Response = agent.post(&path).send_json(serde_json::to_value(req)?)?;
+    let resp: SyncedShoppingList = resp.into_json()?;
+    Ok(State::new(resp));
+}
+
+fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
+    let synced_list = initial_sync(agent, config)?;
+
+    Ok(State::new(synced_list))
 }
 
 fn main() -> Result<()> {
-    let body: String = ureq::get("http://192.168.178.184:4000/api/Demo")
-        .call()?
-        .into_string()?;
+    let config = Config {
+        server: "http://localhost:4000".to_owned(),
+        list_id: "Demo".to_owned(),
+    };
 
-    let mut list: ShoppingList = serde_json::from_str(&body)?;
-    // list.add(SLItem::StringRepr {
-    //     id: None,
-    //     string_representation: "bar".to_owned(),
-    // });
+    let agent = ureq::AgentBuilder::new()
+        .proxy(ureq::Proxy::new("localhost:8080")?)
+        .build();
 
-    list.title = "foobazasdads".into();
+    let state = get_current_list(&agent, &config)?;
+    println!("initial state: {:#?}", state);
 
-    println!("{:#?}", list);
+    let item = SLItem::new("(OG) test".to_owned());
+    state.current_state.add(item);
 
-    let ser_list = serde_json::to_string(&list)?;
+    let state = sync(&agent, &config, SyncRequest::new(state, new_state.list));
 
-    println!("{}", ser_list);
+    println!("{:#?}", state);
 
-    let val = serde_json::to_value(&list)?;
-    println!("PUT Request: {:#?}", val);
-
-    let resp: std::result::Result<ureq::Response, ureq::Error> =
-        ureq::put("http://192.168.178.184:4000/api/Demo")
-            // .send_string(&val);
-            .send_json(val);
-    match resp {
-        Err(e) => match e {
-            ureq::Error::Status(_, r) => {
-                println!("{:?}", r.into_string()?);
-            }
-            ureq::Error::Transport(_) => {}
-        },
-        Ok(r) => {
-            println!("{:?}", r.into_string()?);
-        }
-    }
-    // .into_string();
-    // let resp: ShoppingList = serde_json::from_str(&resp)?;
-
-    // println!("Response: {:#?}", resp);
     Ok(())
 }
