@@ -17,10 +17,12 @@ struct Shop {
 
 #[derive(StructOpt, Debug)]
 enum Command {
+    /// Add an item to the list
     Add {
         /// the string representation of an item
         item: Vec<String>,
     },
+    /// Remove an item from the list
     Remove {
         /// the string representation of an item,
         /// or the index of an item on the list
