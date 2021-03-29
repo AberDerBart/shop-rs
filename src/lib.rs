@@ -12,3 +12,12 @@ impl Config {
         format!("{}/api/{}", self.server, self.list_id)
     }
 }
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            server: "https://list.tilman.ninja".to_owned(),
+            list_id: "Demo".to_owned(),
+        }
+    }
+}
