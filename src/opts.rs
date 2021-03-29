@@ -28,9 +28,7 @@ fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
 }
 
 pub fn add(config: &Config, item: String) -> Result<()> {
-    let agent = ureq::AgentBuilder::new()
-        .proxy(ureq::Proxy::new("localhost:8080")?)
-        .build();
+    let agent = ureq::AgentBuilder::new().build();
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.add(item);
@@ -40,9 +38,7 @@ pub fn add(config: &Config, item: String) -> Result<()> {
 }
 
 pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
-    let agent = ureq::AgentBuilder::new()
-        .proxy(ureq::Proxy::new("localhost:8080")?)
-        .build();
+    let agent = ureq::AgentBuilder::new().build();
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.remove_by_index(index);
@@ -52,8 +48,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
 }
 
 pub fn print_list(config: &Config) -> Result<()> {
-    let agent = ureq::AgentBuilder::new()
-        .build();
+    let agent = ureq::AgentBuilder::new().build();
 
     let state = get_current_list(&agent, config)?;
 
