@@ -136,8 +136,9 @@ impl ShoppingList {
 impl Display for ShoppingList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         writeln!(f, "{}", &self.title)?;
-        for item in &self.items {
-            writeln!(f, "{}", item)?;
+        let num_digits = format!("{}", self.items.len()).len();
+        for (index, item) in self.items.iter().enumerate() {
+            writeln!(f, "{:>n$}. {}", index + 1, item, n = num_digits)?;
         }
         Ok(())
     }
