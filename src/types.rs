@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -7,6 +8,16 @@ pub struct Amount {
     value: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
     unit: Option<String>,
+}
+
+impl Display for Amount {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        write!(f, "{:.2}", self.value)?;
+        if let Some(u) = &self.unit {
+            write!(f, " {}", u)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -25,6 +36,34 @@ pub enum SLItem {
         #[serde(rename = "stringRepresentation")]
         string_representation: String,
     },
+}
+
+impl Display for SLItem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        match self {
+            SLItem::ServerRepr {
+                id: _,
+                name,
+                amount,
+                category,
+            } => {
+                if let Some(c) = category {
+                    write!(f, "{} ", c)?;
+                }
+                if let Some(a) = amount {
+                    write!(f, "{} ", a)?;
+                }
+                write!(f, "{}", name)?;
+            }
+            SLItem::StringRepr {
+                id: _,
+                string_representation,
+            } => {
+                write!(f, "{}", string_representation)?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl SLItem {
@@ -91,6 +130,16 @@ impl ShoppingList {
             None => Err(anyhow!("invalid index")),
             Some(item) => Ok(item.edit(new_value)),
         }
+    }
+}
+
+impl Display for ShoppingList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        writeln!(f, "{}", &self.title)?;
+        for item in &self.items {
+            writeln!(f, "{}", item)?;
+        }
+        Ok(())
     }
 }
 
