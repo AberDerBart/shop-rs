@@ -1,6 +1,6 @@
-use structopt::StructOpt;
 use anyhow::Result;
-use shop_rs::{Config, opts};
+use shop_rs::{ops, Config};
+use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
 #[structopt(about = "interact with shopping lists")]
@@ -35,33 +35,33 @@ fn main() -> Result<()> {
     println!("{:?}", opt);
 
     match opt.cmd {
-        Some(Command::Add{item: i}) => {
+        Some(Command::Add { item: i }) => {
             println!("add {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
-            let result = opts::add(&config, item);
+            let result = ops::add(&config, item);
             println!("add result {:#?}", result);
-        },
-        Some(Command::Remove{item: i}) => {
+        }
+        Some(Command::Remove { item: i }) => {
             println!("remove {:#?}", i);
             let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
             let result = match parse_index(&item) {
-                Some(i) => opts::remove_by_index(&config, i),
-                None => Ok(()),//remove_item(item),
+                Some(i) => ops::remove_by_index(&config, i),
+                None => Ok(()), //remove_item(item),
             };
             println!("remove result {:#?}", result);
-        },
+        }
         None => {
             let config = gen_config(opt.server, opt.list);
-            let result = opts::print_list(&config);
+            let result = ops::print_list(&config);
             println!("remove result {:#?}", result);
         }
     }
     Ok(())
 }
 
-fn parse_index(i: &str) -> Option<usize>{
+fn parse_index(i: &str) -> Option<usize> {
     i.parse::<usize>().ok()
 }
 
