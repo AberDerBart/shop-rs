@@ -3,6 +3,11 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use uuid::Uuid;
 
+extern crate colored;
+use colored::*;
+
+use css_color_parser2::Color;
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Amount {
     value: f64,
@@ -16,6 +21,33 @@ impl Display for Amount {
         if let Some(u) = &self.unit {
             write!(f, " {}", u)?;
         }
+        Ok(())
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CategoryDefinition {
+    pub id: Uuid,
+    pub name: String,
+    #[serde(rename = "shortName")]
+    pub short_name: String,
+    pub color: String,
+    #[serde(rename = "lightText")]
+    pub light_text: bool,
+}
+
+impl Display for CategoryDefinition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let formatted = format!("({})", self.short_name);
+        let color = self.color.parse::<Color>();
+        let colored = match color {
+            Ok(color) => match self.light_text {
+                true => formatted.on_truecolor(color.r, color.g, color.b).white(),
+                false => formatted.truecolor(color.r, color.g, color.b),
+            },
+            Err(_) => formatted.normal(),
+        };
+        write!(f, "{}", colored)?;
         Ok(())
     }
 }
@@ -154,6 +186,16 @@ pub struct SyncedShoppingList {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum SyncResponse {
+    List(SyncedShoppingList),
+    Response {
+        list: SyncedShoppingList,
+        categories: Vec<CategoryDefinition>,
+    },
+}
+
+#[derive(Serialize, Debug, Clone)]
 pub struct SyncRequest {
     #[serde(rename = "previousSync")]
     previous_sync: SyncedShoppingList,
@@ -185,6 +227,24 @@ impl State {
     }
 }
 
+impl From<SyncResponse> for State {
+    fn from(sr: SyncResponse) -> Self {
+        match sr {
+            SyncResponse::List(list) => State {
+                current_state: list.list.clone(),
+                previous_sync: list,
+            },
+            SyncResponse::Response {
+                list,
+                categories: _,
+            } => State {
+                current_state: list.list.clone(),
+                previous_sync: list,
+            },
+        }
+    }
+}
+
 impl SyncRequest {
     pub fn new(previous_sync: SyncedShoppingList, current_state: ShoppingList) -> Self {
         SyncRequest {
@@ -200,7 +260,7 @@ impl From<State> for SyncRequest {
         SyncRequest {
             previous_sync: state.previous_sync,
             current_state: state.current_state,
-            include_in_reponse: vec![],
+            include_in_reponse: vec!["categories".to_owned()],
         }
     }
 }

@@ -1,4 +1,5 @@
-use super::{Config, State, SyncRequest, SyncedShoppingList};
+use super::{Config, State, SyncRequest};
+use crate::SyncResponse;
 use anyhow::Result;
 
 fn get_agent(config: &Config) -> Result<ureq::Agent> {
@@ -11,13 +12,14 @@ fn get_agent(config: &Config) -> Result<ureq::Agent> {
     Ok(agent)
 }
 
-fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<SyncedShoppingList> {
+fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<State> {
     let mut path = config.path();
-    path.push_str("/sync");
+    path.push_str("/sync?includeInResponse=categories");
     let resp: ureq::Response = agent.get(&path).call()?;
 
-    let resp: SyncedShoppingList = resp.into_json()?;
-    Ok(resp)
+    let resp: SyncResponse = resp.into_json()?;
+
+    Ok(resp.into())
 }
 
 fn sync(agent: &ureq::Agent, config: &Config, state: State) -> Result<State> {
@@ -27,14 +29,15 @@ fn sync(agent: &ureq::Agent, config: &Config, state: State) -> Result<State> {
     let req: SyncRequest = state.into();
 
     let resp: ureq::Response = agent.post(&path).send_json(serde_json::to_value(req)?)?;
-    let resp: SyncedShoppingList = resp.into_json()?;
-    Ok(State::new(resp))
+    let resp: SyncResponse = resp.into_json()?;
+
+    Ok(resp.into())
 }
 
 fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
-    let synced_list = initial_sync(agent, config)?;
+    let state = initial_sync(agent, config)?;
 
-    Ok(State::new(synced_list))
+    Ok(state)
 }
 
 pub fn add(config: &Config, item: String) -> Result<()> {
