@@ -11,6 +11,9 @@ struct Shop {
     #[structopt(short, long)]
     /// name of the shopping list
     list: Option<String>,
+    #[structopt(short, long)]
+    /// proxy server
+    proxy: Option<String>,
     #[structopt(subcommand)]
     cmd: Option<Command>,
 }
@@ -33,18 +36,17 @@ enum Command {
 fn main() -> Result<()> {
     let opt = Shop::from_args();
     println!("{:?}", opt);
+    let config = gen_config(opt.server, opt.list, opt.proxy);
 
     match opt.cmd {
         Some(Command::Add { item: i }) => {
             println!("add {:#?}", i);
-            let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
             let result = ops::add(&config, item);
             println!("add result {:#?}", result);
         }
         Some(Command::Remove { item: i }) => {
             println!("remove {:#?}", i);
-            let config = gen_config(opt.server, opt.list);
             let item = i.join(" ");
             let result = match parse_index(&item) {
                 Some(i) => ops::remove_by_index(&config, i),
@@ -53,7 +55,6 @@ fn main() -> Result<()> {
             println!("remove result {:#?}", result);
         }
         None => {
-            let config = gen_config(opt.server, opt.list);
             let result = ops::print_list(&config);
             println!("remove result {:#?}", result);
         }
@@ -65,13 +66,16 @@ fn parse_index(i: &str) -> Option<usize> {
     i.parse::<usize>().ok()
 }
 
-fn gen_config(server: Option<String>, list: Option<String>) -> Config {
+fn gen_config(server: Option<String>, list: Option<String>, proxy: Option<String>) -> Config {
     let mut c = Config::default();
     if let Some(s) = server {
         c.server = s;
     };
     if let Some(l) = list {
         c.list_id = l
+    }
+    if let Some(p) = proxy {
+        c.proxy = Some(p)
     }
     c
 }

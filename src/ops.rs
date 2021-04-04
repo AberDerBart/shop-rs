@@ -1,6 +1,16 @@
 use super::{Config, State, SyncRequest, SyncedShoppingList};
 use anyhow::Result;
 
+fn get_agent(config: &Config) -> Result<ureq::Agent> {
+    let agent = match &config.proxy {
+        Some(proxy) => ureq::AgentBuilder::new()
+            .proxy(ureq::Proxy::new(proxy)?)
+            .build(),
+        None => ureq::AgentBuilder::new().build(),
+    };
+    Ok(agent)
+}
+
 fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<SyncedShoppingList> {
     let mut path = config.path();
     path.push_str("/sync");
@@ -28,7 +38,7 @@ fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
 }
 
 pub fn add(config: &Config, item: String) -> Result<()> {
-    let agent = ureq::AgentBuilder::new().build();
+    let agent = get_agent(config)?;
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.add(item);
@@ -40,7 +50,7 @@ pub fn add(config: &Config, item: String) -> Result<()> {
 }
 
 pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
-    let agent = ureq::AgentBuilder::new().build();
+    let agent = get_agent(config)?;
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.remove_by_index(index);
@@ -52,7 +62,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
 }
 
 pub fn print_list(config: &Config) -> Result<()> {
-    let agent = ureq::AgentBuilder::new().build();
+    let agent = get_agent(config)?;
 
     let state = get_current_list(&agent, config)?;
 

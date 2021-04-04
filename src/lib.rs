@@ -5,6 +5,7 @@ pub use types::*;
 pub struct Config {
     pub server: String,
     pub list_id: String,
+    pub proxy: Option<String>,
 }
 
 impl Config {
@@ -18,6 +19,7 @@ impl Default for Config {
         Config {
             server: "https://list.tilman.ninja".to_owned(),
             list_id: "Demo".to_owned(),
+            proxy: None,
         }
     }
 }
