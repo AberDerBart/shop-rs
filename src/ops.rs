@@ -47,7 +47,7 @@ pub fn add(config: &Config, item: String) -> Result<()> {
     state.current_state.add(item);
     let state = sync(&agent, &config, state)?;
 
-    print!("{}", state.current_state);
+    print!("{}", state);
 
     Ok(())
 }
@@ -59,7 +59,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
     state.current_state.remove_by_index(index);
     let state = sync(&agent, &config, state)?;
 
-    print!("{}", state.current_state);
+    print!("{}", state);
 
     Ok(())
 }
@@ -69,7 +69,7 @@ pub fn print_list(config: &Config) -> Result<()> {
 
     let state = get_current_list(&agent, config)?;
 
-    print!("{}", state.current_state);
+    print!("{}", state);
 
     Ok(())
 }

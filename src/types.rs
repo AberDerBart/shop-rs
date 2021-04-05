@@ -77,11 +77,8 @@ impl Display for SLItem {
                 id: _,
                 name,
                 amount,
-                category,
+                category: _,
             } => {
-                if let Some(c) = category {
-                    write!(f, "{} ", c)?;
-                }
                 if let Some(a) = amount {
                     write!(f, "{} ", a)?;
                 }
@@ -165,17 +162,6 @@ impl ShoppingList {
     }
 }
 
-impl Display for ShoppingList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        writeln!(f, "{}", &self.title)?;
-        let num_digits = format!("{}", self.items.len()).len();
-        for (index, item) in self.items.iter().enumerate() {
-            writeln!(f, "{:>n$}. {}", index + 1, item, n = num_digits)?;
-        }
-        Ok(())
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SyncedShoppingList {
     #[serde(flatten)]
@@ -215,15 +201,38 @@ pub struct State {
     previous_sync: SyncedShoppingList,
     #[serde(rename = "currentState")]
     pub current_state: ShoppingList,
+    pub categories: Vec<CategoryDefinition>,
 }
 
-impl State {
-    pub fn new(previous_sync: SyncedShoppingList) -> Self {
-        let current_state = previous_sync.list.clone();
-        State {
-            previous_sync,
-            current_state,
+impl Display for State {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{}", &self.current_state.title)?;
+        let num_digits = format!("{}", self.current_state.items.len()).len();
+        for (index, item) in self.current_state.items.iter().enumerate() {
+            let category = if let SLItem::ServerRepr {
+                id: _,
+                name: _,
+                category,
+                amount: _,
+            } = item
+            {
+                self.categories.iter().find(|c| &Some(c.id) == category)
+            } else {
+                None
+            };
+            match category {
+                Some(category) => writeln!(
+                    f,
+                    "{:>n$}. {} {}",
+                    index + 1,
+                    category,
+                    item,
+                    n = num_digits
+                )?,
+                None => writeln!(f, "{:>n$}. {}", index + 1, item, n = num_digits)?,
+            }
         }
+        Ok(())
     }
 }
 
@@ -233,13 +242,12 @@ impl From<SyncResponse> for State {
             SyncResponse::List(list) => State {
                 current_state: list.list.clone(),
                 previous_sync: list,
+                categories: vec![],
             },
-            SyncResponse::Response {
-                list,
-                categories: _,
-            } => State {
+            SyncResponse::Response { list, categories } => State {
                 current_state: list.list.clone(),
                 previous_sync: list,
+                categories: categories,
             },
         }
     }
