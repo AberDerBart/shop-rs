@@ -3,7 +3,7 @@ let
     "https://github.com/oxalica/rust-overlay/archive/master.tar.gz");
   nixpkgs = import <nixpkgs> { overlays = [ oxalica_overlay ]; };
   unstable = import <nixos-unstable> {};
-  rust_channel = nixpkgs.rust-bin.stable."1.48.0".rust;
+  rust_channel = nixpkgs.rust-bin.stable."1.48.0".default;
 in with nixpkgs;
 pkgs.mkShell {
   buildInputs = [
