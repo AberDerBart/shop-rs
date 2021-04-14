@@ -38,16 +38,9 @@ pub struct CategoryDefinition {
 
 impl Display for CategoryDefinition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let formatted = format!("({})", self.short_name);
         let color = self.color.parse::<Color>();
-        let colored = match color {
-            Ok(color) => match self.light_text {
-                true => formatted.on_truecolor(color.r, color.g, color.b).white(),
-                false => formatted.truecolor(color.r, color.g, color.b),
-            },
-            Err(_) => formatted.normal(),
-        };
-        write!(f, "{}", colored)?;
+        let colorblock = color.map(|c| " ".on_truecolor(c.r, c.g, c.b)).unwrap_or(" ".normal());
+        write!(f, "{}({})", colorblock, self.short_name)?;
         Ok(())
     }
 }
@@ -223,7 +216,7 @@ impl Display for State {
             match category {
                 Some(category) => writeln!(
                     f,
-                    "{:>n$}. {} {}",
+                    "{:>n$}.{} {}",
                     index + 1,
                     category,
                     item,
