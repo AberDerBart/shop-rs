@@ -1,9 +1,12 @@
 pub mod ops;
 mod types;
+use serde::{Deserialize, Serialize};
 pub use types::*;
 
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Config {
     pub server: String,
+    #[serde(rename = "list")]
     pub list_id: String,
     pub proxy: Option<String>,
 }

@@ -2,6 +2,16 @@ use anyhow::Result;
 use shop_rs::{ops, Config};
 use structopt::StructOpt;
 
+lazy_static::lazy_static! {
+    static ref CONFIG: Config = {
+        let path = std::path::Path::new("config.toml");
+        match &std::fs::read(path) {
+            Ok(bytes) => toml::de::from_slice(bytes).unwrap_or_default(),
+            Err(_) => Default::default(),
+        }
+    };
+}
+
 #[derive(StructOpt, Debug)]
 #[structopt(about = "interact with shopping lists")]
 struct Shop {
@@ -67,7 +77,7 @@ fn parse_index(i: &str) -> Option<usize> {
 }
 
 fn gen_config(server: Option<String>, list: Option<String>, proxy: Option<String>) -> Config {
-    let mut c = Config::default();
+    let mut c = CONFIG.clone();
     if let Some(s) = server {
         c.server = s;
     };
