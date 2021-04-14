@@ -78,7 +78,7 @@ fn main() -> Result<()> {
 }
 
 fn parse_index(i: &str) -> Option<usize> {
-    i.parse::<usize>().ok()
+    i.parse::<usize>().ok().map(|i| i - 1)
 }
 
 fn gen_config(server: Option<String>, list: Option<String>, proxy: Option<String>) -> Config {
