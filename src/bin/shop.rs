@@ -40,8 +40,8 @@ enum Command {
         /// the string representation of an item
         item: Vec<String>,
     },
-    /// Remove an item from the list
-    Remove {
+    /// Delete an item from the list
+    Del {
         /// the string representation of an item,
         /// or the index of an item on the list
         item: Vec<String>,
@@ -60,7 +60,7 @@ fn main() -> Result<()> {
             let result = ops::add(&config, item);
             println!("add result {:#?}", result);
         }
-        Some(Command::Remove { item: i }) => {
+        Some(Command::Del { item: i }) => {
             println!("remove {:#?}", i);
             let item = i.join(" ");
             let result = match parse_index(&item) {
