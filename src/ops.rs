@@ -29,9 +29,13 @@ fn sync(agent: &ureq::Agent, config: &Config, state: State) -> Result<State> {
     let mut path = config.path();
     path.push_str("/sync");
 
-    let req: SyncRequest = state.into();
+    let data: SyncRequest = state.into();
 
-    let resp: ureq::Response = agent.post(&path).send_json(serde_json::to_value(req)?)?;
+    let mut req = agent.post(&path);
+    if let Some(ref u) = config.username {
+        req = req.set("X-ShoppingList-Username", u)
+    };
+    let resp = req.send_json(serde_json::to_value(data)?)?;
     let resp: SyncResponse = resp.into_json()?;
 
     Ok(resp.into())

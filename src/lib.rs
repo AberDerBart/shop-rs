@@ -9,6 +9,7 @@ pub struct Config {
     #[serde(rename = "list")]
     pub list_id: String,
     pub proxy: Option<String>,
+    pub username: Option<String>,
 }
 
 impl Config {
@@ -23,6 +24,7 @@ impl Default for Config {
             server: "https://list.tilman.ninja".to_owned(),
             list_id: "Demo".to_owned(),
             proxy: None,
+            username: None,
         }
     }
 }
