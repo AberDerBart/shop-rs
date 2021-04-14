@@ -4,10 +4,15 @@ use structopt::StructOpt;
 
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
-        let path = std::path::Path::new("config.toml");
-        match &std::fs::read(path) {
-            Ok(bytes) => toml::de::from_slice(bytes).unwrap_or_default(),
-            Err(_) => Default::default(),
+        let foo = directories::ProjectDirs::from("","","shop-rs");
+        match foo {
+            Some(project_dir) => {
+                let path = project_dir.config_dir().join("config.toml");
+                match &std::fs::read(path) {
+                    Ok(bytes) => toml::de::from_slice(bytes).unwrap_or_default(),
+                    Err(_) => Default::default(),
+                }},
+            None => Default::default(),
         }
     };
 }
