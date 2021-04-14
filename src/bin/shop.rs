@@ -1,6 +1,8 @@
 use anyhow::Result;
 use shop_rs::{ops, Config};
 use structopt::StructOpt;
+#[macro_use]
+extern crate log;
 
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
@@ -49,29 +51,30 @@ enum Command {
 }
 
 fn main() -> Result<()> {
+    env_logger::init();
     let opt = Shop::from_args();
-    println!("{:?}", opt);
+    debug!("{:?}", opt);
     let config = gen_config(opt.server, opt.list, opt.proxy);
 
     match opt.cmd {
         Some(Command::Add { item: i }) => {
-            println!("add {:#?}", i);
+            debug!("add {:#?}", i);
             let item = i.join(" ");
             let result = ops::add(&config, item);
-            println!("add result {:#?}", result);
+            debug!("add result {:#?}", result);
         }
         Some(Command::Del { item: i }) => {
-            println!("remove {:#?}", i);
+            debug!("remove {:#?}", i);
             let item = i.join(" ");
             let result = match parse_index(&item) {
                 Some(i) => ops::remove_by_index(&config, i),
                 None => Ok(()), //remove_item(item),
             };
-            println!("remove result {:#?}", result);
+            debug!("remove result {:#?}", result);
         }
         None => {
             let result = ops::print_list(&config);
-            println!("remove result {:#?}", result);
+            debug!("remove result {:#?}", result);
         }
     }
     Ok(())
