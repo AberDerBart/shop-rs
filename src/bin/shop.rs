@@ -73,8 +73,7 @@ fn main() -> Result<()> {
             debug!("remove result {:#?}", result);
         }
         None => {
-            let result = ops::print_list(&config);
-            debug!("remove result {:#?}", result);
+            ops::print_list(&config)?;
         }
     }
     Ok(())
