@@ -14,8 +14,11 @@ fn get_agent(config: &Config) -> Result<ureq::Agent> {
 
 fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<State> {
     let mut path = config.path();
-    path.push_str("/sync?includeInResponse=categories");
-    let resp: ureq::Response = agent.get(&path).call()?;
+    path.push_str("/sync");
+    let resp = agent
+        .get(&path)
+        .query("includeInResponse", "categories")
+        .call()?;
 
     let resp: SyncResponse = resp.into_json()?;
 
