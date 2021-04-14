@@ -143,8 +143,13 @@ impl ShoppingList {
         self.items.push(SLItem::new(string_representation));
     }
 
-    pub fn remove_by_index(&mut self, index: usize) {
-        self.items.remove(index);
+    pub fn remove_by_index(&mut self, index: usize) -> Result<()> {
+        if index < self.items.len() {
+            self.items.remove(index);
+            Ok(())
+        } else {
+            Err(anyhow!("invalid index"))
+        }
     }
 
     pub fn edit_by_index(&mut self, index: usize, new_value: String) -> Result<()> {

@@ -63,7 +63,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
     let agent = get_agent(config)?;
 
     let mut state = get_current_list(&agent, config)?;
-    state.current_state.remove_by_index(index);
+    state.current_state.remove_by_index(index)?;
     let state = sync(&agent, &config, state)?;
 
     print!("{}", state);
