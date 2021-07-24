@@ -48,6 +48,13 @@ enum Command {
         /// or the index of an item on the list
         item: Vec<String>,
     },
+    /// Edit a list item
+    Edit {
+        /// the index of the item to edit
+        item: String,
+        /// the string representation of the new item value
+        value: Vec<String>,
+    }
 }
 
 fn main() -> Result<()> {
@@ -71,6 +78,15 @@ fn main() -> Result<()> {
                 None => Ok(()), //remove_item(item),
             };
             debug!("remove result {:#?}", result);
+        }
+        Some(Command::Edit {item: i, value: v}) => {
+            let v = v.join(" ");
+            debug!("edit {:#?} to {:#?}",i,v);
+            let result = match parse_index(&i) {
+                Some(i) => ops::edit_by_index(&config, i, v),
+                None => Ok(()),
+            };
+            debug!("edit result {:#?}", result);
         }
         None => {
             ops::print_list(&config)?;

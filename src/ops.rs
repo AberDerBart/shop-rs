@@ -59,6 +59,18 @@ pub fn add(config: &Config, item: String) -> Result<()> {
     Ok(())
 }
 
+pub fn edit_by_index(config: &Config, index: usize, value: String) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let mut state = get_current_list(&agent, config)?;
+    state.current_state.edit_by_index(index, value)?;
+    let state = sync(&agent, &config, state)?;
+
+    print!("{}", state);
+
+    Ok(())
+}
+
 pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
     let agent = get_agent(config)?;
 
