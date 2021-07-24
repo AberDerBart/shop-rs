@@ -1,22 +1,40 @@
-use anyhow::Result;
+use std::path::PathBuf;
+
+use anyhow::{Result,anyhow};
 use shop_rs::{ops, Config};
 use structopt::StructOpt;
 #[macro_use]
 extern crate log;
 
+fn config_path() -> Result<PathBuf> {
+    let project_dir = directories::ProjectDirs::from("","","shop-rs").ok_or(anyhow!("Could not find config directory"))?;
+    let path = project_dir.config_dir().join("config.toml");
+
+    Ok(path)
+}
+
 lazy_static::lazy_static! {
     static ref CONFIG: Config = {
-        let foo = directories::ProjectDirs::from("","","shop-rs");
-        match foo {
-            Some(project_dir) => {
-                let path = project_dir.config_dir().join("config.toml");
+        match config_path() {
+            Ok(path) => {
                 match &std::fs::read(path) {
                     Ok(bytes) => toml::de::from_slice(bytes).unwrap_or_default(),
                     Err(_) => Default::default(),
                 }},
-            None => Default::default(),
+            _ => {Default::default()},
         }
     };
+}
+
+fn write_config(config: &Config) -> Result<()> {
+    let path = config_path()?;
+    let content = toml::ser::to_string(config)?;
+
+    debug!("writing config to {:?}", path);
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    std::fs::write(path, content)?;
+
+    Ok(())
 }
 
 #[derive(StructOpt, Debug)]
@@ -57,6 +75,8 @@ enum Command {
     },
     /// List categories
     Categories,
+    /// Saves the configuration (server, list, etc.)
+    Save,
 }
 
 fn main() -> Result<()> {
@@ -94,6 +114,11 @@ fn main() -> Result<()> {
             debug!("categories");
             let result = ops::print_categories(&config)?;
             debug!("categories result {:#?}", result);
+        }
+        Some(Command::Save) => {
+            debug!("save");
+            write_config(&config)?;
+            debug!("config written");
         }
         None => {
             ops::print_list(&config)?;
