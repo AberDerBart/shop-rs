@@ -92,3 +92,14 @@ pub fn print_list(config: &Config) -> Result<()> {
 
     Ok(())
 }
+
+pub fn print_categories(config: &Config) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let state = get_current_list(&agent, config)?;
+    for cat in &state.categories {
+        cat.println_long();
+    }
+
+    Ok(())
+}

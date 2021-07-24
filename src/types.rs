@@ -45,6 +45,14 @@ impl Display for CategoryDefinition {
     }
 }
 
+impl CategoryDefinition {
+    pub fn println_long(&self) {
+        let color = self.color.parse::<Color>();
+        let colorblock = color.map(|c| " ".on_truecolor(c.r, c.g, c.b)).unwrap_or(" ".normal());
+        println!("{}({}) {}", colorblock, self.short_name, self.name);
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum SLItem {

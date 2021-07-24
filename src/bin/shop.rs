@@ -54,7 +54,9 @@ enum Command {
         item: String,
         /// the string representation of the new item value
         value: Vec<String>,
-    }
+    },
+    /// List categories
+    Categories,
 }
 
 fn main() -> Result<()> {
@@ -87,6 +89,11 @@ fn main() -> Result<()> {
                 None => Ok(()),
             };
             debug!("edit result {:#?}", result);
+        }
+        Some(Command::Categories) => {
+            debug!("categories");
+            let result = ops::print_categories(&config)?;
+            debug!("categories result {:#?}", result);
         }
         None => {
             ops::print_list(&config)?;
