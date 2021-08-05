@@ -75,7 +75,7 @@ enum Command {
     },
     /// List categories
     Categories,
-    /// Saves the configuration (server, list, etc.)
+    /// Saves the configuration (set by -s, -l, etc.)
     Save,
 }
 
