@@ -1,7 +1,8 @@
 use super::{Config, State, SyncRequest};
-use crate::SyncResponse;
+use crate::{CategoryDefinition, SyncResponse};
 use anyhow::Result;
 use std::io::{self, BufRead};
+use uuid::Uuid;
 
 fn get_agent(config: &Config) -> Result<ureq::Agent> {
     let agent = match &config.proxy {
@@ -26,11 +27,11 @@ fn initial_sync(agent: &ureq::Agent, config: &Config) -> Result<State> {
     Ok(resp.into())
 }
 
-fn sync(agent: &ureq::Agent, config: &Config, state: State) -> Result<State> {
+fn sync(agent: &ureq::Agent, config: &Config, state: State, include_categories: bool) -> Result<State> {
     let mut path = config.path();
     path.push_str("/sync");
 
-    let data: SyncRequest = state.into();
+    let data = SyncRequest::from_state(state, include_categories);
 
     let mut req = agent.post(&path);
     if let Some(ref u) = config.username {
@@ -63,7 +64,7 @@ pub fn add_from_stdin(config: &Config) -> Result<()> {
         }
     }
 
-    let state = sync(&agent, &config, state)?;
+    let state = sync(&agent, &config, state, false)?;
 
     print!("{}", state);
 
@@ -75,7 +76,7 @@ pub fn add(config: &Config, item: String) -> Result<()> {
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.add(item);
-    let state = sync(&agent, &config, state)?;
+    let state = sync(&agent, &config, state, false)?;
 
     print!("{}", state);
 
@@ -87,7 +88,7 @@ pub fn edit_by_index(config: &Config, index: usize, value: String) -> Result<()>
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.edit_by_index(index, value)?;
-    let state = sync(&agent, &config, state)?;
+    let state = sync(&agent, &config, state, false)?;
 
     print!("{}", state);
 
@@ -99,7 +100,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.remove_by_index(index)?;
-    let state = sync(&agent, &config, state)?;
+    let state = sync(&agent, &config, state, false)?;
 
     print!("{}", state);
 
@@ -124,5 +125,50 @@ pub fn print_categories(config: &Config) -> Result<()> {
         cat.println_long();
     }
 
+    Ok(())
+}
+
+fn random_color() -> String {
+    let r = rand::random::<u8>();
+    let g = rand::random::<u8>();
+    let b = rand::random::<u8>();
+
+    format!("#{:0>2x}{:0>2x}{:0>2x}", r,g,b)
+}
+
+fn derive_category_short_name(name: &str) -> String {
+    let short: String = name.chars().filter(|c| c.is_uppercase()).collect();
+
+    if short.len() > 0 {
+        return short
+    }
+
+    if name.len() >= 3 {
+        return name[..3].to_uppercase()
+    }
+    
+    name.to_uppercase()
+}
+
+pub fn add_category(config: &Config, name: String, short_name: Option<String>, color: Option<String>, light_text: bool) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let mut state = get_current_list(&agent, config)?;
+
+    let short_name = short_name.unwrap_or_else(|| derive_category_short_name(&name));
+    let color = color.unwrap_or_else(|| random_color());
+
+    state.categories.push(CategoryDefinition{
+        name,
+        color,
+        short_name,
+        light_text,
+        id: Uuid::new_v4(),        
+    });
+
+    let state = sync(&agent, &config, state, true)?;
+    for cat in &state.categories {
+        cat.println_long();
+    }
     Ok(())
 }

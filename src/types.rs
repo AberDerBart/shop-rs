@@ -195,7 +195,7 @@ pub struct SyncRequest {
     current_state: ShoppingList,
     #[serde(rename = "includeInResponse")]
     include_in_reponse: Vec<String>,
-    // TODO: categories
+    categories: Option<Vec<CategoryDefinition>>,
     // TODO: orders
     // TODO: deleteCompletions
     // TODO: addCompletions
@@ -265,16 +265,16 @@ impl SyncRequest {
             previous_sync,
             current_state,
             include_in_reponse: vec![],
+            categories: None,
         }
     }
-}
 
-impl From<State> for SyncRequest {
-    fn from(state: State) -> Self {
+    pub fn from_state(state: State, include_categories: bool) -> Self {
         SyncRequest {
             previous_sync: state.previous_sync,
             current_state: state.current_state,
             include_in_reponse: vec!["categories".to_owned()],
+            categories: if include_categories {Some(state.categories)} else{ None},
         }
     }
 }
