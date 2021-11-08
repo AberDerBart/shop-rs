@@ -74,10 +74,36 @@ enum Command {
         value: Vec<String>,
     },
     /// List categories
-    Categories,
+    Categories {
+        #[structopt(subcommand)]
+        cat_cmd: Option<CategoryCommand>,
+    },
     /// Saves the configuration (set by -s, -l, etc.)
     Save,
 }
+
+
+#[derive(StructOpt, Debug)]
+enum CategoryCommand {
+    // /// List categories
+    // List,
+    /// Add category
+    Add {
+        /// name of the category
+        name: String,
+        /// abbreviation of the category
+        #[structopt(short, long)]
+        short: Option<String>,
+        /// color
+        #[structopt(short, long)]
+        color: Option<String>,
+        /// enable light text (for other clients)
+        #[structopt(short, long)]
+        lighttext: bool,
+    },
+}
+
+
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -110,10 +136,15 @@ fn main() -> Result<()> {
             };
             debug!("edit result {:#?}", result);
         }
-        Some(Command::Categories) => {
-            debug!("categories");
+        Some(Command::Categories {cat_cmd: None}) => {
+            debug!("categories list");
             let result = ops::print_categories(&config)?;
             debug!("categories result {:#?}", result);
+        }
+        Some(Command::Categories { cat_cmd: Some(CategoryCommand::Add { name, short, color, lighttext})}) => {
+            debug!("categories add");
+            let result = ops::add_category(&config, name, short, color, lighttext);
+            debug!("result {:#?}", result)
         }
         Some(Command::Save) => {
             debug!("save");
