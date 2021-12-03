@@ -1,6 +1,7 @@
 use super::{Config, State, SyncRequest};
 use crate::SyncResponse;
 use anyhow::Result;
+use std::io::{self, BufRead};
 
 fn get_agent(config: &Config) -> Result<ureq::Agent> {
     let agent = match &config.proxy {
@@ -45,6 +46,28 @@ fn get_current_list(agent: &ureq::Agent, config: &Config) -> Result<State> {
     let state = initial_sync(agent, config)?;
 
     Ok(state)
+}
+
+pub fn add_from_stdin(config: &Config) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let mut state = get_current_list(&agent, config)?;
+
+    let stdin = io::stdin();
+    let lines = stdin.lock().lines();
+
+    for line in lines {
+        let line = line?;
+        if !line.is_empty() {
+            state.current_state.add(line);
+        }
+    }
+
+    let state = sync(&agent, &config, state)?;
+
+    print!("{}", state);
+
+    Ok(())
 }
 
 pub fn add(config: &Config, item: String) -> Result<()> {

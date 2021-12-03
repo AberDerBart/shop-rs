@@ -1,13 +1,17 @@
 use std::path::PathBuf;
 
-use anyhow::{Result,anyhow};
-use shop_rs::{ops, Config};
+use anyhow::{anyhow, Result};
+use shop_rs::{
+    ops::{self, add, add_from_stdin},
+    Config,
+};
 use structopt::StructOpt;
 #[macro_use]
 extern crate log;
 
 fn config_path() -> Result<PathBuf> {
-    let project_dir = directories::ProjectDirs::from("","","shop-rs").ok_or(anyhow!("Could not find config directory"))?;
+    let project_dir = directories::ProjectDirs::from("", "", "shop-rs")
+        .ok_or(anyhow!("Could not find config directory"))?;
     let path = project_dir.config_dir().join("config.toml");
 
     Ok(path)
@@ -86,10 +90,16 @@ fn main() -> Result<()> {
     let config = gen_config(opt.server, opt.list, opt.proxy);
 
     match opt.cmd {
-        Some(Command::Add { item: i }) => {
-            debug!("add {:#?}", i);
-            let item = i.join(" ");
-            let result = ops::add(&config, item);
+        Some(Command::Add { item }) => {
+            debug!("add {:#?}", item);
+            let result = {
+                let config = &config;
+                if item.len() > 0 {
+                    add(config, item.join(" "))
+                } else {
+                    add_from_stdin(config)
+                }
+            };
             debug!("add result {:#?}", result);
         }
         Some(Command::Del { item: i }) => {
@@ -101,9 +111,9 @@ fn main() -> Result<()> {
             };
             debug!("remove result {:#?}", result);
         }
-        Some(Command::Edit {item: i, value: v}) => {
+        Some(Command::Edit { item: i, value: v }) => {
             let v = v.join(" ");
-            debug!("edit {:#?} to {:#?}",i,v);
+            debug!("edit {:#?} to {:#?}", i, v);
             let result = match parse_index(&i) {
                 Some(i) => ops::edit_by_index(&config, i, v),
                 None => Ok(()),
