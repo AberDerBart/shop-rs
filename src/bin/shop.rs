@@ -1,13 +1,14 @@
 use std::path::PathBuf;
 
-use anyhow::{Result,anyhow};
+use anyhow::{anyhow, Result};
 use shop_rs::{ops, Config};
 use structopt::StructOpt;
 #[macro_use]
 extern crate log;
 
 fn config_path() -> Result<PathBuf> {
-    let project_dir = directories::ProjectDirs::from("","","shop-rs").ok_or(anyhow!("Could not find config directory"))?;
+    let project_dir = directories::ProjectDirs::from("", "", "shop-rs")
+        .ok_or(anyhow!("Could not find config directory"))?;
     let path = project_dir.config_dir().join("config.toml");
 
     Ok(path)
@@ -82,7 +83,6 @@ enum Command {
     Save,
 }
 
-
 #[derive(StructOpt, Debug)]
 enum CategoryCommand {
     // /// List categories
@@ -90,7 +90,8 @@ enum CategoryCommand {
     /// Add category
     Add {
         /// name of the category
-        name: String,
+        #[structopt(required(true))]
+        name: Vec<String>,
         /// abbreviation of the category
         #[structopt(short, long)]
         short: Option<String>,
@@ -102,8 +103,6 @@ enum CategoryCommand {
         lighttext: bool,
     },
 }
-
-
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -127,23 +126,31 @@ fn main() -> Result<()> {
             };
             debug!("remove result {:#?}", result);
         }
-        Some(Command::Edit {item: i, value: v}) => {
+        Some(Command::Edit { item: i, value: v }) => {
             let v = v.join(" ");
-            debug!("edit {:#?} to {:#?}",i,v);
+            debug!("edit {:#?} to {:#?}", i, v);
             let result = match parse_index(&i) {
                 Some(i) => ops::edit_by_index(&config, i, v),
                 None => Ok(()),
             };
             debug!("edit result {:#?}", result);
         }
-        Some(Command::Categories {cat_cmd: None}) => {
+        Some(Command::Categories { cat_cmd: None }) => {
             debug!("categories list");
             let result = ops::print_categories(&config)?;
             debug!("categories result {:#?}", result);
         }
-        Some(Command::Categories { cat_cmd: Some(CategoryCommand::Add { name, short, color, lighttext})}) => {
+        Some(Command::Categories {
+            cat_cmd:
+                Some(CategoryCommand::Add {
+                    name,
+                    short,
+                    color,
+                    lighttext,
+                }),
+        }) => {
             debug!("categories add");
-            let result = ops::add_category(&config, name, short, color, lighttext);
+            let result = ops::add_category(&config, name.join(" "), short, color, lighttext);
             debug!("result {:#?}", result)
         }
         Some(Command::Save) => {
