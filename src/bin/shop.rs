@@ -86,7 +86,6 @@ enum Command {
     Save,
 }
 
-
 #[derive(StructOpt, Debug)]
 enum CategoryCommand {
     // /// List categories
@@ -94,7 +93,8 @@ enum CategoryCommand {
     /// Add category
     Add {
         /// name of the category
-        name: String,
+        #[structopt(required(true))]
+        name: Vec<String>,
         /// abbreviation of the category
         #[structopt(short, long)]
         short: Option<String>,
@@ -106,8 +106,6 @@ enum CategoryCommand {
         lighttext: bool,
     },
 }
-
-
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -141,13 +139,21 @@ fn main() -> Result<()> {
                 None => Ok(()),
             }
         }
-        Some(Command::Categories {cat_cmd: None}) => {
+        Some(Command::Categories { cat_cmd: None }) => {
             debug!("categories list");
             ops::print_categories(&config)            
         }
-        Some(Command::Categories { cat_cmd: Some(CategoryCommand::Add { name, short, color, lighttext})}) => {
+        Some(Command::Categories {
+            cat_cmd:
+                Some(CategoryCommand::Add {
+                    name,
+                    short,
+                    color,
+                    lighttext,
+                }),
+        }) => {
             debug!("categories add");
-            ops::add_category(&config, name, short, color, lighttext)
+            ops::add_category(&config, name.join(" "), short, color, lighttext)
         }
         Some(Command::Save) => {
             debug!("save");
