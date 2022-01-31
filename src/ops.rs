@@ -1,6 +1,6 @@
 use super::{Config, State, SyncRequest};
 use crate::{CategoryDefinition, SyncResponse};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use uuid::Uuid;
 
 fn get_agent(config: &Config) -> Result<ureq::Agent> {
@@ -147,6 +147,7 @@ pub fn add_category(
     let agent = get_agent(config)?;
 
     let mut state = get_current_list(&agent, config)?;
+    // TODO: make sure state is synced
 
     let short_name = short_name.unwrap_or_else(|| derive_category_short_name(&name));
     let color = color.unwrap_or_else(|| random_color());
@@ -159,6 +160,24 @@ pub fn add_category(
         id: Uuid::new_v4(),
     });
 
+    let state = sync(&agent, &config, state, true)?;
+
+    print_categories_internal(&state.categories);
+
+    Ok(())
+}
+
+pub fn remove_category_by_index(config: &Config, index: usize) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let mut state = get_current_list(&agent, config)?;
+    // TODO: make sure state is synced
+
+    if index >= state.categories.len() {
+        return Err(anyhow!("invalid index"));
+    }
+
+    state.categories.remove(index);
     let state = sync(&agent, &config, state, true)?;
 
     print_categories_internal(&state.categories);
