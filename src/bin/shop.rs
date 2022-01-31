@@ -105,6 +105,11 @@ enum CategoryCommand {
         #[structopt(long)]
         lighttext: bool,
     },
+    /// Delete category
+    Del {
+        /// the abbreviation or index of the category to be deleted
+        category: String,
+    },
 }
 
 fn main() -> Result<()> {
@@ -154,6 +159,15 @@ fn main() -> Result<()> {
         }) => {
             debug!("categories add");
             ops::add_category(&config, name.join(" "), short, color, lighttext)
+        }
+        Some(Command::Categories {
+            cat_cmd: Some(CategoryCommand::Del { category }),
+        }) => {
+            debug!("categories del");
+            match parse_index(&category) {
+                Some(index) => ops::remove_category_by_index(&config, index),
+                None => Ok(()), // TODO: remove by abbreviation
+            }
         }
         Some(Command::Save) => {
             debug!("save");
