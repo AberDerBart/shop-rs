@@ -39,17 +39,21 @@ pub struct CategoryDefinition {
 impl Display for CategoryDefinition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let color = self.color.parse::<Color>();
-        let colorblock = color.map(|c| " ".on_truecolor(c.r, c.g, c.b)).unwrap_or(" ".normal());
+        let colorblock = color
+            .map(|c| " ".on_truecolor(c.r, c.g, c.b))
+            .unwrap_or(" ".normal());
         write!(f, "{}({})", colorblock, self.short_name)?;
         Ok(())
     }
 }
 
 impl CategoryDefinition {
-    pub fn println_long(&self) {
+    pub fn to_string_long(&self) -> String {
         let color = self.color.parse::<Color>();
-        let colorblock = color.map(|c| " ".on_truecolor(c.r, c.g, c.b)).unwrap_or(" ".normal());
-        println!("{}({}) {}", colorblock, self.short_name, self.name);
+        let colorblock = color
+            .map(|c| " ".on_truecolor(c.r, c.g, c.b))
+            .unwrap_or(" ".normal());
+        format!("{}({}) {}", colorblock, self.short_name, self.name)
     }
 }
 
@@ -227,14 +231,9 @@ impl Display for State {
                 None
             };
             match category {
-                Some(category) => writeln!(
-                    f,
-                    "{:>n$}.{} {}",
-                    index + 1,
-                    category,
-                    item,
-                    n = num_digits
-                )?,
+                Some(category) => {
+                    writeln!(f, "{:>n$}.{} {}", index + 1, category, item, n = num_digits)?
+                }
                 None => writeln!(f, "{:>n$}. {}", index + 1, item, n = num_digits)?,
             }
         }
@@ -274,7 +273,11 @@ impl SyncRequest {
             previous_sync: state.previous_sync,
             current_state: state.current_state,
             include_in_reponse: vec!["categories".to_owned()],
-            categories: if include_categories {Some(state.categories)} else{ None},
+            categories: if include_categories {
+                Some(state.categories)
+            } else {
+                None
+            },
         }
     }
 }
