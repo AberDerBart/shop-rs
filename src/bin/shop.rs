@@ -79,8 +79,22 @@ enum Command {
     },
     /// List categories
     Categories,
+    /// Emit completions
+    #[structopt(setting(structopt::clap::AppSettings::Hidden))]
+    Completions {
+        #[structopt(subcommand)]
+        cmd: CompletionsCommand,
+    },
     /// Saves the configuration (set by -s, -l, etc.)
     Save,
+}
+
+#[derive(StructOpt, Debug)]
+enum CompletionsCommand {
+    /// Emit category completions
+    Categories,
+    /// Emit item completions
+    Items,
 }
 
 fn main() -> Result<()> {
@@ -123,9 +137,14 @@ fn main() -> Result<()> {
             debug!("save");
             write_config(&config)
         }
-        None => {
-            ops::print_list(&config)
+        Some(Command::Completions { cmd }) => {
+            debug!("completions");
+            match cmd {
+                CompletionsCommand::Categories => ops::print_categories_short(&config),
+                CompletionsCommand::Items => unimplemented!(),
+            }
         }
+        None => ops::print_list(&config),
     }
 }
 

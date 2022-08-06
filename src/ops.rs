@@ -126,3 +126,14 @@ pub fn print_categories(config: &Config) -> Result<()> {
 
     Ok(())
 }
+
+pub fn print_categories_short(config: &Config) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let state = get_current_list(&agent, config)?;
+    for cat in &state.categories {
+        cat.println_short();
+    }
+
+    Ok(())
+}

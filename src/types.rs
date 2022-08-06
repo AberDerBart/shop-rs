@@ -51,6 +51,10 @@ impl CategoryDefinition {
         let colorblock = color.map(|c| " ".on_truecolor(c.r, c.g, c.b)).unwrap_or(" ".normal());
         println!("{}({}) {}", colorblock, self.short_name, self.name);
     }
+
+    pub fn println_short(&self) {
+        println!("({})", self.short_name);
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
