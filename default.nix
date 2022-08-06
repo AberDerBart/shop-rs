@@ -1,6 +1,7 @@
 # build me with
 # nix-build -E "with import <nixpkgs> {}; callPackage ./default.nix {}"
 { stdenv
+, lib
 , rustPlatform
 , fetchFromGitHub
 , llvmPackages
@@ -30,7 +31,7 @@ rustPlatform.buildRustPackage rec {
 
   cargoSha256 = "sha256:0000000000000000000000000000000000000000000000000000";
 
-  meta = with stdenv.lib; {
+  meta = with lib; {
     description = "A command line client for shoppinglist.";
     homepage = "https://github.com/AberDerBart/shop-rs";
     license = with licenses; [ mit ];
