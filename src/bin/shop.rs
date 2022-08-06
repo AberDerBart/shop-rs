@@ -92,49 +92,41 @@ fn main() -> Result<()> {
     match opt.cmd {
         Some(Command::Add { item }) => {
             debug!("add {:#?}", item);
-            let result = {
-                let config = &config;
-                if item.len() > 0 {
-                    add(config, item.join(" "))
-                } else {
-                    add_from_stdin(config)
-                }
-            };
-            debug!("add result {:#?}", result);
+            let config = &config;
+            if item.len() > 0 {
+                add(config, item.join(" "))
+            } else {
+                add_from_stdin(config)
+            }
         }
         Some(Command::Del { item: i }) => {
             debug!("remove {:#?}", i);
             let item = i.join(" ");
-            let result = match parse_index(&item) {
+            match parse_index(&item) {
                 Some(i) => ops::remove_by_index(&config, i),
                 None => Ok(()), //remove_item(item),
-            };
-            debug!("remove result {:#?}", result);
+            }
         }
         Some(Command::Edit { item: i, value: v }) => {
             let v = v.join(" ");
             debug!("edit {:#?} to {:#?}", i, v);
-            let result = match parse_index(&i) {
+            match parse_index(&i) {
                 Some(i) => ops::edit_by_index(&config, i, v),
                 None => Ok(()),
-            };
-            debug!("edit result {:#?}", result);
+            }
         }
         Some(Command::Categories) => {
             debug!("categories");
-            let result = ops::print_categories(&config)?;
-            debug!("categories result {:#?}", result);
+            ops::print_categories(&config)
         }
         Some(Command::Save) => {
             debug!("save");
-            write_config(&config)?;
-            debug!("config written");
+            write_config(&config)
         }
         None => {
-            ops::print_list(&config)?;
+            ops::print_list(&config)
         }
     }
-    Ok(())
 }
 
 fn parse_index(i: &str) -> Option<usize> {
