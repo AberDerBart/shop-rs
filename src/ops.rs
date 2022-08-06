@@ -1,5 +1,5 @@
 use super::{Config, State, SyncRequest};
-use crate::{CategoryDefinition, SyncResponse};
+use crate::{CategoryDefinition, IncludeCategories, SyncResponse};
 use anyhow::{anyhow, Result};
 use std::io::{self, BufRead};
 use uuid::Uuid;
@@ -31,7 +31,7 @@ fn sync(
     agent: &ureq::Agent,
     config: &Config,
     state: State,
-    include_categories: bool,
+    include_categories: IncludeCategories,
 ) -> Result<State> {
     let mut path = config.path();
     path.push_str("/sync");
@@ -69,7 +69,7 @@ pub fn add_from_stdin(config: &Config) -> Result<()> {
         }
     }
 
-    let state = sync(&agent, &config, state, false)?;
+    let state = sync(&agent, &config, state, IncludeCategories::No)?;
 
     print!("{}", state);
 
@@ -81,7 +81,7 @@ pub fn add(config: &Config, item: String) -> Result<()> {
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.add(item);
-    let state = sync(&agent, &config, state, false)?;
+    let state = sync(&agent, &config, state, IncludeCategories::No)?;
 
     print!("{}", state);
 
@@ -93,7 +93,7 @@ pub fn edit_by_index(config: &Config, index: usize, value: String) -> Result<()>
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.edit_by_index(index, value)?;
-    let state = sync(&agent, &config, state, false)?;
+    let state = sync(&agent, &config, state, IncludeCategories::No)?;
 
     print!("{}", state);
 
@@ -105,7 +105,7 @@ pub fn remove_by_index(config: &Config, index: usize) -> Result<()> {
 
     let mut state = get_current_list(&agent, config)?;
     state.current_state.remove_by_index(index)?;
-    let state = sync(&agent, &config, state, false)?;
+    let state = sync(&agent, &config, state, IncludeCategories::No)?;
 
     print!("{}", state);
 
@@ -183,7 +183,7 @@ pub fn add_category(
         id: Uuid::new_v4(),
     });
 
-    let state = sync(&agent, &config, state, true)?;
+    let state = sync(&agent, &config, state, IncludeCategories::Yes)?;
 
     print_categories_internal(&state.categories);
 
@@ -201,7 +201,7 @@ pub fn remove_category_by_index(config: &Config, index: usize) -> Result<()> {
     }
 
     state.categories.remove(index);
-    let state = sync(&agent, &config, state, true)?;
+    let state = sync(&agent, &config, state, IncludeCategories::Yes)?;
 
     print_categories_internal(&state.categories);
 
@@ -242,7 +242,7 @@ pub fn edit_category_by_index(
         category.light_text = light_text;
     }
 
-    let state = sync(&agent, config, state, true)?;
+    let state = sync(&agent, config, state, IncludeCategories::Yes)?;
 
     print_categories_internal(&state.categories);
 

@@ -8,6 +8,12 @@ use colored::*;
 
 use css_color_parser2::Color;
 
+#[derive(PartialEq)]
+pub enum IncludeCategories {
+    Yes,
+    No,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Amount {
     value: f64,
@@ -268,12 +274,12 @@ impl SyncRequest {
         }
     }
 
-    pub fn from_state(state: State, include_categories: bool) -> Self {
+    pub fn from_state(state: State, include_categories: IncludeCategories) -> Self {
         SyncRequest {
             previous_sync: state.previous_sync,
             current_state: state.current_state,
             include_in_reponse: vec!["categories".to_owned()],
-            categories: if include_categories {
+            categories: if include_categories == IncludeCategories::Yes {
                 Some(state.categories)
             } else {
                 None
