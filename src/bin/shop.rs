@@ -110,6 +110,25 @@ enum CategoryCommand {
         /// the abbreviation or index of the category to be deleted
         category: String,
     },
+    Edit {
+        /// the abbreviation or index of the category to be edited
+        category: String,
+        /// name
+        #[structopt()]
+        name: Option<String>,
+        /// abbreviation of the category
+        #[structopt(short, long)]
+        short: Option<String>,
+        /// color
+        #[structopt(short, long)]
+        color: Option<String>,
+        /// enable light text (for other clients)
+        #[structopt(long, conflicts_with = "no_lighttext")]
+        lighttext: bool,
+        /// disable light text (for other clients)
+        #[structopt(long, conflicts_with = "lighttext")]
+        no_lighttext: bool,
+    },
 }
 
 fn main() -> Result<()> {
@@ -146,7 +165,7 @@ fn main() -> Result<()> {
         }
         Some(Command::Categories { cat_cmd: None }) => {
             debug!("categories list");
-            ops::print_categories(&config)            
+            ops::print_categories(&config)
         }
         Some(Command::Categories {
             cat_cmd:
@@ -169,13 +188,39 @@ fn main() -> Result<()> {
                 None => Ok(()), // TODO: remove by abbreviation
             }
         }
+        Some(Command::Categories {
+            cat_cmd:
+                Some(CategoryCommand::Edit {
+                    name,
+                    short,
+                    category,
+                    color,
+                    lighttext,
+                    no_lighttext,
+                }),
+        }) => {
+            let lighttext_option = match (lighttext, no_lighttext) {
+                (true, false) => Some(true),
+                (false, true) => Some(false),
+                _ => None,
+            };
+            match parse_index(&category) {
+                Some(index) => ops::edit_category_by_index(
+                    &config,
+                    index,
+                    name,
+                    short,
+                    color,
+                    lighttext_option,
+                ),
+                None => Ok(()), // TODO: edit by abbreviation
+            }
+        }
         Some(Command::Save) => {
             debug!("save");
             write_config(&config)
         }
-        None => {
-            ops::print_list(&config)
-        }
+        None => ops::print_list(&config),
     }
 }
 

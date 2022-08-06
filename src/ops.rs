@@ -1,7 +1,7 @@
 use super::{Config, State, SyncRequest};
 use crate::{CategoryDefinition, SyncResponse};
-use std::io::{self, BufRead};
 use anyhow::{anyhow, Result};
+use std::io::{self, BufRead};
 use uuid::Uuid;
 
 fn get_agent(config: &Config) -> Result<ureq::Agent> {
@@ -202,6 +202,47 @@ pub fn remove_category_by_index(config: &Config, index: usize) -> Result<()> {
 
     state.categories.remove(index);
     let state = sync(&agent, &config, state, true)?;
+
+    print_categories_internal(&state.categories);
+
+    Ok(())
+}
+
+pub fn edit_category_by_index(
+    config: &Config,
+    index: usize,
+    name: Option<String>,
+    short_name: Option<String>,
+    color: Option<String>,
+    light_text: Option<bool>,
+) -> Result<()> {
+    let agent = get_agent(config)?;
+
+    let mut state = get_current_list(&agent, config)?;
+
+    if index >= state.categories.len() {
+        return Err(anyhow!("invalid index"));
+    }
+
+    let mut category = match state.categories.get_mut(index) {
+        Some(c) => Ok(c),
+        None => Err(anyhow!("invalid index")),
+    }?;
+
+    if let Some(name) = name {
+        category.name = name;
+    }
+    if let Some(short) = short_name {
+        category.short_name = short;
+    }
+    if let Some(color) = color {
+        category.color = color;
+    }
+    if let Some(light_text) = light_text {
+        category.light_text = light_text;
+    }
+
+    let state = sync(&agent, config, state, true)?;
 
     print_categories_internal(&state.categories);
 
